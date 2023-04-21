@@ -16,9 +16,13 @@ namespace DorkTextAdventure.Models
 
         public Item() { }
 
+
+
+
+
         public override string ToString()
         {
-            return base.ToString();
+            return $"{Noun}";
         }
 
 

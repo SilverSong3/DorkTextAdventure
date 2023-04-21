@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Xamarin.Forms;
 
 using DorkTextAdventure.Models;
+using System.Runtime.InteropServices;
 
 namespace DorkTextAdventure
 {
@@ -38,12 +39,13 @@ namespace DorkTextAdventure
             LoadRoomData();
             LoadItemData();
 
-            string game = "Dork Adventure 0.01\n\nBy: El Slash";
+            string game = "Dork Adventure 0.01\n\nBy: El Slash.\n\n";
             string desc = rooms[num].ToString();
+            string floor = GetItems();
 
             editorDisplay = new Editor()
             {
-                Text = game + desc, //"Dork Adventure 0.01\n\nBy: El Slash" + rooms[roomID].ToString(),
+                Text = game + desc + floor, //"Dork Adventure 0.01\n\nBy: El Slash" + rooms[roomID].ToString(),
                 FlowDirection = FlowDirection.LeftToRight,
                 HeightRequest = 500,
                 WidthRequest = 100,
@@ -94,34 +96,229 @@ namespace DorkTextAdventure
                 HorizontalOptions = LayoutOptions.Center,
             };
 
-            
+
 
             entry.Completed += async (sender, args) =>
             {
-                await DisplayAlert("command: success", "great job", "Okay!");
+                ParseCommand(editorDisplay.Text);
+                entry.Text = "";
+
+
+                //await DisplayAlert("command: success", "great job", "Okay!");
             };
 
             button.Clicked += async (sender, args) => 
             {
+                ParseCommand(editorDisplay.Text);
                 entry.Text = "";
-                await Action();
+                //HandleCommand(editorDisplay.Text, );
+                //await Action();
                 //eh, there's something that can make the thing focused.
             };
-
 
             Content = stackLayout;
 
         }
 
-
-        public async Task Action()
+        public void ParseCommand(string cmd)
         {
-            await DisplayAlert("You pressed a button. Good job.", "...great job", "Okay...?");
+
+            if (cmd.Length == 0) { return; }
+
+            string noun = "";
+            string verb = "";
+
+            if (cmd.Contains(" "))
+            {
+                verb = cmd.Substring(0, cmd.IndexOf(" "));
+                noun = cmd.Substring(cmd.IndexOf(" ") + 1);
+
+                if(verb == "go")
+                {
+                    verb = noun;
+                    MoveToRoom(noun);//essentially passes the verb to the room to move to the room.
+                    return;
+                }
+
+                HandleCommand(verb, noun);
+            }
+            else
+            {
+                //does not account for the go -- TODO: check if verb is go, if so, show no direction provided (Go Where?)
+                verb = (cmd.Length) > 1 ? cmd.Substring(0, 3) : verb = cmd;
+                noun = "";
+
+                string[] dirs = new string[] { "n", "nor", "s", "sou", "e", "eas", "w", "wes", "go"};
+
+                foreach(string d in dirs)
+                {
+                    if(d == verb) { MoveToRoom(verb); DisplayRoom(); return; }
+                }
+
+                string[] verbs = new string[] { "inv", "sco", "loo", "dig", "lig", "qui" };
+                foreach(string v in verbs)
+                {
+                    if(v == verb) { HandleCommand(v, ""); return; }
+                }
+
+                verbs = new string[] { "exa", "tak", "dro", "get", "lig", "rea" };
+                foreach (string v in verbs)
+                {
+                    if (v == verb) { HandleCommand(v, noun); return; }
+                }
+            }
         }
+
+        //public async Task Action()
+        //{
+            //await DisplayAlert("You pressed a button. Good job.", "...great job", "Okay...?");
+        //}
+
+        public void HandleCommand(string verb, string noun)
+        {
+            switch(verb)
+            {
+                case "loo"://look
+                    {
+                        editorDisplay.Text += "\n\n";
+                        break;
+                    }
+                case "inv"://inventory
+                    {
+                        editorDisplay.Text += "\n\n";
+                        break;
+                    }
+                case "sco"://score
+                    {
+                        editorDisplay.Text += $"You have scored {score} points out of 20.\n\n";
+                        break;
+                    }
+                case "":
+                    {
+                        editorDisplay.Text += "\n\n";
+                        break;
+                    }
+                case "exa":
+                    {
+                        editorDisplay.Text += $"Yup, It's a {noun}...\n\n";
+                        break;
+                    }
+                case "get":
+                case "tak"://take/get
+                    {
+                        editorDisplay.Text += $"You pick up a {noun}.\n\n";
+                        break;
+                    }
+                case "dro"://drop
+                    {
+                        editorDisplay.Text += "Read what?\n\n";
+                        break;
+                    }
+                case "rea":
+                    {
+                        editorDisplay.Text += "\n\n";
+                        break;
+                    }
+                case "ope"://open
+                    {
+                        editorDisplay.Text += "Open what?\n\n";
+                        break;
+                    }
+                case "dig"://dig
+                    {
+                        editorDisplay.Text += "Going to China?\n\n";
+                        break;
+                    }
+                case "lig"://light
+                    {
+                        editorDisplay.Text += "Light what?\n\n";
+                        break;
+                    }
+                case "qui":
+                    {
+                        editorDisplay.Text += "Goodbye!";
+                        //Environment.Exit(0);
+
+
+                        break;
+                    }
+
+            }
+
+            //Display room after processing the commands.
+            DisplayRoom();
+        }
+
 
         public void DisplayRoom()
         {
             editorDisplay.Text += rooms[num].ToString();
+            editorDisplay.Text += GetItems();
+        }
+
+        public void MoveToRoom(string verb)
+        {
+            string where = "Go Where?\n\n";
+            switch(verb)
+            {
+                case "n":
+                case "nor":
+                    {
+                        if (rooms[num].Exits[0] != 0) { num = rooms[num].Exits[0]; }
+                        else { editorDisplay.Text += where; }
+                        break;
+                    }
+                case "s":
+                case "sou":
+                    {
+                        if (rooms[num].Exits[1] != 0) { num = rooms[num].Exits[1]; }
+                        else { editorDisplay.Text += where; }
+                        break;
+                    }
+                case "e":
+                case "eas":
+                    {
+                        if (rooms[num].Exits[2] != 0) { num = rooms[num].Exits[2]; }
+                        else { editorDisplay.Text += where; }
+                        break;
+                    }
+                case "w":
+                case "wes":
+                    {
+                        if (rooms[num].Exits[3] != 0) { num = rooms[num].Exits[3]; }
+                        else { editorDisplay.Text += where; }
+                        break;
+                    }
+            }
+
+            //DisplayRoom();
+
+        }
+
+        public string GetItems()
+        {
+            string list = "";
+
+            foreach(Item i in items)
+            {
+                if (i.Room == num)
+                {
+                    list += $"{i.ToString()}, ";
+                }
+            }
+
+            if (list.Length != 0)
+            {
+                list = list.Substring(0, list.Length - 2) + ".";
+            }
+            else
+            {
+                list = "Nothing...";
+            }
+
+            //list = list.Substring(list.Length, list.Length - 2);
+
+            return "You see: " + list + "\n\n";
         }
 
 
@@ -135,7 +332,7 @@ namespace DorkTextAdventure
             r.Name = "Limbo";
             r.Description = "out in Limbo.";
             r.Exits = new int[] { };
-            r.Items = new int[] { };
+            //r.Items = new int[] { };
             rooms.Add(r);
 
             r = new Room();
@@ -143,7 +340,7 @@ namespace DorkTextAdventure
             r.Name = "Village Green";
             r.Description = "on the village green.";
             r.Exits = new int[] { 3, 0, 4, 2 };
-            r.Items = new int[] { };
+            //r.Items = new int[] { };
             rooms.Add(r);
 
             r = new Room();
@@ -151,7 +348,7 @@ namespace DorkTextAdventure
             r.Name = "School";
             r.Description = "in a one-room school.";
             r.Exits = new int[] { 0, 0, 1, 6 };
-            r.Items = new int[] { };
+            //r.Items = new int[] { };
             rooms.Add(r);
 
             r = new Room();
@@ -159,7 +356,7 @@ namespace DorkTextAdventure
             r.Name = "Church";
             r.Description = "in a rustic church.";
             r.Exits = new int[] { 0, 1, 0, 0};
-            r.Items = new int[] { };
+            //r.Items = new int[] { };
             rooms.Add(r);
 
             r = new Room();
@@ -167,7 +364,7 @@ namespace DorkTextAdventure
             r.Name = "Bank";
             r.Description = "in the bank of David.";
             r.Exits = new int[] { 0, 0, 0, 1};
-            r.Items = new int[] { };
+            //r.Items = new int[] { };
             rooms.Add(r);
 
             r = new Room();
@@ -175,7 +372,7 @@ namespace DorkTextAdventure
             r.Name = "Safe";
             r.Description = "in the safe of the bank.";
             r.Exits = new int[] { 4, 0, 0, 0 };
-            r.Items = new int[] { };
+            //r.Items = new int[] { };
             rooms.Add(r);
 
             r = new Room();
@@ -183,12 +380,22 @@ namespace DorkTextAdventure
             r.Name = "Storeroom";
             r.Description = "in a dusty storeroom.";
             r.Exits = new int[] { 0, 0, 2, 0};
-            r.Items = new int[] { };
+            //r.Items = new int[] { };
             rooms.Add(r);
 
         }
         public void LoadItemData()
         {
+            //Attributes: 
+                //3 - Treasures,
+                //2 - Other moveable objects,
+                //1 - Imovable objects,
+                //0 - Scenery
+
+            //Rooms:
+                //
+
+
             //Use to create items
 
             Item I = new Item();
@@ -199,6 +406,7 @@ namespace DorkTextAdventure
             I.Command = "cha";
             I.Room = 2;
             I.Attribute = 2;
+            items.Add(I);
 
             I = new Item();
             I.Id = 1;
@@ -206,6 +414,7 @@ namespace DorkTextAdventure
             I.Command = "tre";
             I.Room = 1;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 2;
@@ -213,6 +422,7 @@ namespace DorkTextAdventure
             I.Command = "sig";
             I.Room = 6;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 3;
@@ -220,6 +430,7 @@ namespace DorkTextAdventure
             I.Command = "key";
             I.Room = 0;
             I.Attribute = 2;
+            items.Add(I);
 
             I = new Item();
             I.Id = 4;
@@ -227,6 +438,7 @@ namespace DorkTextAdventure
             I.Command = "coi";
             I.Room = 5;
             I.Attribute = 3;
+            items.Add(I);
 
             I = new Item();
             I.Id = 5;
@@ -234,6 +446,7 @@ namespace DorkTextAdventure
             I.Command = "";
             I.Room = 0;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 6;
@@ -241,6 +454,7 @@ namespace DorkTextAdventure
             I.Command = "";
             I.Room = 3;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 7;
@@ -248,6 +462,7 @@ namespace DorkTextAdventure
             I.Command = "can";
             I.Room = 0;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 8;
@@ -255,6 +470,7 @@ namespace DorkTextAdventure
             I.Command = "mat";
             I.Room = 0;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 9;
@@ -262,6 +478,7 @@ namespace DorkTextAdventure
             I.Command = "gol";
             I.Room = 0;
             I.Attribute = 3;
+            items.Add(I);
 
             I = new Item();
             I.Id = 10;
@@ -269,6 +486,7 @@ namespace DorkTextAdventure
             I.Command = "des";
             I.Room = 0;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 11;
@@ -276,6 +494,7 @@ namespace DorkTextAdventure
             I.Command = "";
             I.Room = 0;
             I.Attribute = 0;
+            items.Add(I);
 
             I = new Item();
             I.Id = 12;
@@ -283,6 +502,7 @@ namespace DorkTextAdventure
             I.Command = "";
             I.Room = 0;
             I.Attribute = 0;
+            items.Add(I);
 
             I.Id = 0;
             I.Noun = "";

@@ -16,13 +16,13 @@ namespace DorkTextAdventure.Models
 
 
         public int[] Exits { get; set; }
-        public int[] Items { get; set; }
+        //public int[] Items { get; set; }
 
 
         public Room()
         {
             Exits = new int[0];
-            Items = new int[0];
+            //Items = new int[0];
         }
 
         //public string CreateExitString()
@@ -72,13 +72,12 @@ namespace DorkTextAdventure.Models
             string value = "";
 
             value = $"{Name}: {ID}\n" +
-                $"You are {Description}. \n\n" +
-                $"You can go: {GetExits()}.\n\n" +
-                $"You see: {GetItems()}.\n\n";
+                $"You are {Description}\n\n" +
+                $"You can go: {GetExits()}\n\n";
+                //$"You see: {GetItems()}\n\n";
 
             return value;
         }
-
 
         public string GetExits()
         {
@@ -96,11 +95,21 @@ namespace DorkTextAdventure.Models
             return exits.Length > 0 ? exits : "Nowhere...";//check if there are places to go.
         }
 
-        public string GetItems()
-        {
-            string items = "";
-            return items;
-        }
+        //public string GetItems()
+        //{
+        //    string list = "";
+
+        //    foreach(int i in Items)
+        //    {
+        //        if(i == ID) //Is the item in the room?
+        //        {
+        //            list += $"{Item.Description}";
+        //        }
+        //    }
+
+
+        //    return list;
+        //}
 
 
 
